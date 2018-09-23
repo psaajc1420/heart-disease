@@ -1,0 +1,128 @@
+---
+title: "Project 1"
+author: "Jacob Cadena"
+date: "9/19/2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+```{r}
+# Import tidyverse library for data tools
+library(tidyverse)
+
+# Clearing the screen and work environment
+rm(list = ls())
+cat("\014")
+
+# Set the working directory
+setwd("/Users/jcadena/Documents/Semesters/Fall 2018/Project-1")
+```
+
+
+```{r}
+# Importing each processed dataset into list to aggregate
+
+col.names <- c("age","sex", "cp","trestbps", "chol",
+               "fbs", "restecg", "thalach", "exang",
+               "oldpeak", "slope", "ca", "thal", "num")
+
+
+data.directory <- "./heart-disease/"
+list.of.files <- paste0(data.directory,"processed.", c("cleveland",
+                                                       "hungarian",
+                                                       "switzerland",
+                                                       "va"), ".data")
+
+list.of.datasets <- lapply(X = list.of.files,
+                           FUN = read.csv,
+                           header = FALSE,
+                           col.names = col.names, 
+                           na.strings = c("?","", " "))
+
+
+# Aggregate the data from the list of the datasets
+dataset <- list.of.datasets[1] %>%
+  bind_rows(list.of.datasets[2]) %>%
+  bind_rows(list.of.datasets[3]) %>%
+  bind_rows(list.of.datasets[4])
+
+
+```
+
+```{r}
+# Cleaning the dataset for anaylsis
+
+# Change categorical variables to factors
+col.names.to.factor <- c("sex", "cp", "fbs", "restecg", "exang", "slope", "num")
+dataset[,col.names.to.factor] <- lapply(dataset[,col.names.to.factor], factor)
+
+
+# Change cardinality in the num column
+levels(dataset$num)[2:5] <- "1"
+print(levels(dataset$num))
+
+# Remove features from the dataset if 30% of a column are NA's
+dataset <- dataset[, colSums(is.na(dataset)) < floor(.3*nrow(dataset))]
+
+print(colSums(is.na(dataset)))
+
+missing.value.strategy <- function(dataset, str = "naive"){
+  if(str == "naive")
+    return(dataset %>% drop_na())
+}
+
+dataset <- missing.value.strategy(dataset)
+
+nas.per.column <- colSums(is.na(dataset))
+print(nas.per.column)
+
+```
+
+
+```{r}
+
+# Split dataset in training/validation/test sets
+set.seed(3123)
+n = which(colnames(dataset) == "num")
+indices <- createDataPartition(y = dataset$num, p=0.7, list = FALSE)
+training.set <- dataset[indices,]
+test.set <- dataset[-indices,]
+
+```
+
+
+```{r}
+
+# If mean or standard deviation is too large in comparision to other 
+# variables apply feature scaling
+
+minmax.normalization <- function(x){
+  return((x - min(x))/(max(x) - min(x)))
+}
+
+mean.normalization <- function(x){
+  return((x - mean(x,na.rm = TRUE))/sd(x,na.rm = TRUE))
+}
+
+continous.vars <- c("age","trestbps","chol","thalach","oldpeak")
+training.set[,continous.vars] <- sapply(training.set[,continous.vars], mean.normalization)
+test.set[,continous.vars] <- sapply(test.set[,continous.vars], mean.normalization)
+
+
+cor(dataset[,continous.vars])
+
+```
+
+
+```{r}
+# Clean up space in memory by deleting variables not used
+rm(list = c("list.of.datasets", "list.of.files", "data.directory",
+            "col.names.to.factor","indices"))
+
+```
+

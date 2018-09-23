@@ -1,0 +1,23 @@
+---
+title: "Project 1"
+author: "Jacob Cadena"
+date: "9/22/2018"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+
+library(GGally)
+
+vars <- c("sex","oldpeak","exang","thalach")
+ggpairs(dataset, columns = vars)
+
+
+
+
+```
+

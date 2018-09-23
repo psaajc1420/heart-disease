@@ -1,0 +1,128 @@
+---
+title: "Project 1"
+author: "Jacob Cadena"
+date: "9/19/2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+# Import libraries
+library(caret)
+library(e1071)
+
+```
+
+```{r}
+# K-fold cross validation accuracy
+cv.10.folds <- createMultiFolds(training.set$num, k = 5, times = 10)
+
+ctrl <- trainControl(method = "repeatedcv",
+                     number = 5,
+                     repeats = 10,
+                     index = cv.10.folds)
+```
+
+
+```{r}
+
+set.seed(3000)
+log.model <- train(num ~ .,
+                   data = training.set,
+                   trControl = ctrl,
+                   method = "glm",
+                   family = binomial,
+                   tuneLength = 10)
+log.model
+
+y.pred.log <- predict(log.model, newdata = test.set[-n])
+
+# Making the Confusion Matrix
+cm.log.test <- confusionMatrix(y.pred.log, test.set[,n])
+print(cm.log.test)
+```
+
+
+```{r}
+
+grid.log <- expand.grid(
+  cost = c(20),
+  epsilon = c(0.01),
+  loss = c("L2_primal")
+)
+
+set.seed(3000)
+reg.log.model <- train(num ~ .,
+                   data = training.set,
+                   trControl = ctrl,
+                   method = "regLogistic",
+                   tuneGrid = grid.log,
+                   tuneLength = 10)
+reg.log.model
+
+y.pred.reg.log <- predict(reg.log.model, newdata = test.set[-n])
+
+# Making the Confusion Matrix
+cm.reg.log.test <- confusionMatrix(y.pred.reg.log, test.set[,n])
+print(cm.reg.log.test)
+
+```
+
+```{r}
+
+grid.bayes <- expand.grid(
+  usekernel = c(TRUE),
+  laplace = 0,
+  adjust = 0
+)
+
+set.seed(3000)
+bayes.model <- train(num ~ .,
+                     data = training.set,
+                     trControl = ctrl,
+                     method = "naive_bayes",
+                     tuneGrid = grid.bayes,
+                     tuneLength = 10)
+bayes.model
+
+y.pred.bayes <- predict(bayes.model, newdata = test.set[-n])
+
+cm.bayes.test <- confusionMatrix(y.pred.bayes, test.set[,n])
+print(cm.bayes.test)
+
+```
+
+```{r}
+
+cv.10.folds <- createMultiFolds(training.set$num, k = 10, times = 10)
+ctrl <- trainControl(method = "repeatedcv",
+                     number = 10,
+                     repeats = 10,
+                     index = cv.10.folds)
+```
+
+```{r}
+
+grid.linear <- expand.grid(C = 5)
+
+set.seed(3000)
+svm.linear.model <- train(num ~ .,
+                          data = training.set,
+                          trControl = ctrl,
+                          method = "svmLinear",
+                          tuneGrid = grid.linear,
+                          tuneLength = 10)
+
+svm.linear.model
+
+y.pred.svm.linear <- predict(svm.linear.model, newdata = test.set[-n])
+
+cm.svm.linear.test <- confusionMatrix(y.pred.svm.linear, test.set[,n])
+print(cm.svm.linear.test)
+
+```
+
+
