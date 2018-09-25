@@ -68,7 +68,7 @@ dataset <- list.of.datasets[1] %>%
 ## Preprocessing
 
 The preprocessing stage proved to be a very important step in predicting heart disease. 
-After changing the categorical variables to factors, one hot encoding was implemented on the chest pain type predictor variable. That separated the variable into binary predictor variables, allowing the model to grasp the essence of each type of chest pain type. In other words, rather than having one variable with four categories, the chest pain variable was split into four variables for the model to gain more insight from each predictor. Another common issue when partioning predictors into multiple predictors is avoiding the dummy variable trap also known as perfect multicollinearity. In the response variable, 
+After changing the categorical variables to factors, one hot encoding was implemented on the chest pain type predictor variable. That separated the variable into binary predictor variables, allowing the model to grasp the essence of each type of chest pain type. In other words, rather than having one variable with four categories, the chest pain variable was split into four variables for the model to gain more insight from each predictor. Another common issue when partioning predictors into multiple predictors is avoiding the dummy variable trap also known as perfect multicollinearity. In the response variable, the labels
 
 
 ```{r}
