@@ -2,18 +2,29 @@
 title: "Project 1"
 author: "Jacob Cadena"
 date: "9/19/2018"
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE, message = FALSE)
 ```
+
+# Heart Disease Analysis
+
+Studying the heart disease dataset, there were several interesting insights that came from the models created.
+
+These insights led to improvements on each model, such as the relevance of the old peak variable.
 
 
 
 ```{r}
-# Import tidyverse library for data tools
+# Import libraries for data tools
 library(tidyverse)
+library(caret)
+library(e1071)
+library(GGally)
 
 # Clearing the screen and work environment
 rm(list = ls())
@@ -54,6 +65,12 @@ dataset <- list.of.datasets[1] %>%
 
 ```
 
+## Preprocessing
+
+The preprocessing stage proved to be a very important step in predicting heart disease. 
+After changing the categorical variables to factors, one hot encoding was implemented on the chest pain type predictor variable. That separated the variable into binary predictor variables, allowing the model to grasp the essence of each type of chest pain type. In other words, rather than having one variable with four categories, the chest pain variable was split into four variables for the model to gain more insight from each predictor. Another common issue when partioning predictors into multiple predictors is avoiding the dummy variable trap also known as perfect multicollinearity. In the response variable, 
+
+
 ```{r}
 # Cleaning the dataset for anaylsis
 
@@ -61,6 +78,13 @@ dataset <- list.of.datasets[1] %>%
 col.names.to.factor <- c("sex", "cp", "fbs", "restecg", "exang", "slope", "num")
 dataset[,col.names.to.factor] <- lapply(dataset[,col.names.to.factor], factor)
 
+dummies <- dummyVars(formula = ~ cp, data = dataset)
+one.hot.encoders<- data.frame(predict(dummies, newdata = dataset))
+one.hot.encoders <- one.hot.encoders[-4]
+
+dataset <- dataset %>%
+  select(-cp) %>%
+  bind_cols(one.hot.encoders) 
 
 # Change cardinality in the num column
 levels(dataset$num)[2:5] <- "1"
@@ -78,11 +102,12 @@ missing.value.strategy <- function(dataset, str = "naive"){
 
 dataset <- missing.value.strategy(dataset)
 
-nas.per.column <- colSums(is.na(dataset))
-print(nas.per.column)
+print(colSums(is.na(dataset)))
+
 
 ```
 
+After creating the dataset obtained my transforming the data, it was split into a training set and test set, which later goes through k-fold cross validation. The data partioning using the the sample function in base R really didn't address the problem of covariate shift. A solution was to utilize the createDataPartition in the caret package, which separated data with equal distributions.
 
 ```{r}
 
@@ -95,6 +120,10 @@ test.set <- dataset[-indices,]
 
 ```
 
+
+That included normalizing variables that have different magnitudes of the mean and standard deviation for faster convergence in training. Utlizing the normalizing strategies such as mean normalization or min max normlization, did not really speed up training for any for the models attempted, which may be due to the fact that there are not many observations. 
+
+ 
 
 ```{r}
 
@@ -113,7 +142,7 @@ continous.vars <- c("age","trestbps","chol","thalach","oldpeak")
 training.set[,continous.vars] <- sapply(training.set[,continous.vars], mean.normalization)
 test.set[,continous.vars] <- sapply(test.set[,continous.vars], mean.normalization)
 
-
+# Attempted to find some correlation between the continous variables
 cor(dataset[,continous.vars])
 
 ```
@@ -122,7 +151,9 @@ cor(dataset[,continous.vars])
 ```{r}
 # Clean up space in memory by deleting variables not used
 rm(list = c("list.of.datasets", "list.of.files", "data.directory",
-            "col.names.to.factor","indices"))
+            "col.names.to.factor","indices", "one.hot.encoders",
+            "missing.value.strategy", "mean.normalization", "minmax.normalization",
+            "dummies", "col.names"))
 
 ```
 

@@ -13,10 +13,8 @@ knitr::opts_chunk$set(echo = TRUE)
 
 library(GGally)
 
-vars <- c("sex","oldpeak","exang","thalach")
+vars <- c("sex","oldpeak","cp.1")
 ggpairs(dataset, columns = vars)
-
-
 
 
 ```
